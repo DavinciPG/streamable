@@ -12,7 +12,7 @@ exports.login = async (req, res, next) => {
         });
 
         if(!user) {
-            return res.status(409).render('sessions', { message: 'User not found!' });
+            return res.render('sessions', { message: 'User not found!' });
         }
 
         // Validating password
@@ -20,14 +20,14 @@ exports.login = async (req, res, next) => {
 
         // If passwords do not match
         if(!valid) {
-            return res.status(401).render('sessions', { message: 'Incorrect password!' });
+            return res.render('sessions', { message: 'Incorrect password!' });
         }
 
         // Creating session
         req.session.user = user;
 
         // Successful, redirecting to home page
-        res.status(201).redirect('/');
+        res.redirect('/');
     } catch(error) {
         next(error);
     }
@@ -43,7 +43,7 @@ exports.register = async (req, res, next) => {
         // Define a regular expression to match usernames with only alphanumeric characters and underscores
         const pattern = /^[a-zA-Z0-9_]+$/;
         if(!username.match(pattern)) {
-            return res.status(400).render('users', { message: 'Username can only include alphanumeric characters and underscores!' })
+            return res.render('users', { message: 'Username can only include alphanumeric characters and underscores!' })
         }
 
         // Checking if user already exists in database
@@ -53,19 +53,19 @@ exports.register = async (req, res, next) => {
             }
         });
         if(existingUser) {
-            return res.status(409).render('users', { message: 'User already exists!' });
+            return res.render('users', { message: 'User already exists!' });
         }
 
         if(username.length < 3 || username.length > 25) {
-            return res.status(400).render('users', { message: 'Username length must be between 3 to 25 characters long!' });
+            return res.render('users', { message: 'Username length must be between 3 to 25 characters long!' });
         }
 
         if(password.length < 10 || password.length > 40) {
-            return res.status(400).render('users', { message: 'Password length must be between 10 to 40 characters long!' });
+            return res.render('users', { message: 'Password length must be between 10 to 40 characters long!' });
         }
 
         if(password !== confirmPassword) {
-            return res.status(400).render('users', { message: 'Passwords do not match!' })
+            return res.render('users', { message: 'Passwords do not match!' })
         }
 
         // Hashing
@@ -85,7 +85,7 @@ exports.register = async (req, res, next) => {
         req.session.user = user;
 
         // Everything went fine
-        return res.status(201).redirect('/');
+        return res.redirect('/');
     } catch (error) {
         next(error);
     }

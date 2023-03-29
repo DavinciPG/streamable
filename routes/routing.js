@@ -22,7 +22,7 @@ router.get('/sessions', (req, res) => {
 });
 router.post('/sessions', userController.login);
 
-router.get('/delete-sessions', (req, res) => {
+router.get('/end-session', (req, res) => {
     req.session.destroy();
     res.redirect('/');
 });
