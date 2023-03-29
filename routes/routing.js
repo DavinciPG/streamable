@@ -13,6 +13,15 @@ router.get('/users', (req, res) => {
 });
 router.post('/users', userController.register);
 
+router.get('/sessions', (req, res) => {
+    if(req.session.user) {
+        res.redirect('/');
+    } else {
+        res.render('sessions');
+    }
+});
+router.post('/sessions', userController.login);
+
 router.get('/end-session', (req, res) => {
     req.session.destroy();
     res.redirect('/');

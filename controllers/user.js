@@ -1,6 +1,38 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/user');
 
+exports.login = async (req, res, next) => {
+    try {
+        const { username, password } = req.body;
+
+        const user = await User.findOne({
+            where: {
+                username: username
+            }
+        });
+
+        if(!user) {
+            return res.render('sessions', { message: 'User not found!' });
+        }
+
+        // Validating password
+        const valid = await bcrypt.compare(password, user.password);
+
+        // If passwords do not match
+        if(!valid) {
+            return res.render('sessions', { message: 'Incorrect password!' });
+        }
+
+        // Creating session
+        req.session.user = user;
+
+        // Successful, redirecting to home page
+        res.redirect('/');
+    } catch(error) {
+        next(error);
+    }
+};
+
 // Handling user registration
 exports.register = async (req, res, next) => {
     try {
