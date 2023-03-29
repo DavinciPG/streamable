@@ -24,16 +24,145 @@ paths:
                 $ref: "#/components/schemas/User"
         400:
           description: "Invalid input"
-    get:
-      summary: "Views users webpage"
-      operationId: "viewUsers"
-      responses:
-        201:
-          description: "Webpage loaded"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Invalid input"
+        409:
+          description: "User already exists"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "User already exists"
+    get:
+      summary: "Get users webpage"
+      operationId: "getUsers"
+      responses:
+        200:
+          description: "List of users"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/User"
+  /sessions:
+    get:
+      summary: Get user login page
+      description: Returns a redirect to home page if user is logged in, otherwise renders the login page
+      responses:
+        '201':
+          description: Redirect to home page if user is logged in
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Redirect to home page"
+        409:
+          description: "User doesn't exist"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "User doesn't exist"
+        401:
+          description: "Invalid input"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Invalid input"
+        'default':
+          description: Renders the login page
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Render login page"
+    post:
+      summary: User login
+      description: Logs in a user with the given username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              example:
+                username: "exampleUser"
+                password: "password123"
+      responses:
+        '302':
+          description: Redirect to home page on successful login
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Redirect to home page"
+        '401':
+          description: "Bad input"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Bad input"
+        'default':
+          description: Renders the login page with an error message if login fails
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Render login page with error message"
+  /delete-sessions:
+    get:
+      summary: End user session
+      description: Destroys the user session and redirects to the home page
+      responses:
+        '302':
+          description: Redirect to home page after ending session
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Redirect to home page"
+
 components:
   schemas:
     User:
@@ -42,12 +171,25 @@ components:
         id:
           type: "integer"
           format: "int64"
+          example: 1
         username:
           type: "string"
+          example: "exampleUser"
         password:
           type: "string"
           description: "The user's password encrypted using bcrypt"
-      example:
-        id: 1
-        username: "exampleUser"
-        password: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldb61W1/5l0Gldjb62y" # bcrypt encrypted password
+          example: "admin12345678910"
+        confirmPassword:
+          type: "string"
+          description: "The repeat of password"
+          example: "admin12345678910"
+    User-end:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 1
+        username:
+          type: "string"
+          example: "exampleUser"
