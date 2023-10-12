@@ -1,10 +1,9 @@
-const User = require('../models/User')
+const User = require('../models/User');
+
+// NOTE: ALL FUNCTIONS EXPECT YOU ARE SENDING FILTERED AND VALID ITEMS
 
 exports.getUserByEmail = async (email) => {
     try {
-        if(email === null || email.length <= 0)
-            return null;
-
         const user = await User.findOne({
             where: {
                 email: email
@@ -13,6 +12,16 @@ exports.getUserByEmail = async (email) => {
 
         // you either get user or null
         return user;
+    } catch(err) {
+        // error handling to do
+    }
+}
+
+exports.createUser = async (email, password) => {
+    try {
+        const newUser = await User.create({ email, password });
+        // we return for extra validaiton checks
+        return newUser;
     } catch(err) {
         // error handling to do
     }

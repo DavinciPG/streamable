@@ -6,6 +6,8 @@ const swaggerDocument = yamlJs.load('./swagger.yaml');
 
 const routing = require("./src/routing");
 
+const cors = require('cors')
+
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
@@ -18,6 +20,9 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Middleware to parse JSON
 app.use(express.json());
+
+// Cors for all routes
+app.use(cors());
 
 // General error handler
 app.use((err, req, res, next) => {

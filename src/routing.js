@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 const {v4: uuidv4} = require('uuid');
+const bcrypt = require('bcrypt');
 
-const { getUserByEmail } = require('./functions/functions')
+const { getUserByEmail, createUser } = require('./functions/functions');
+
+// globally stored hash rounds
+const saltRounds = 10;
 
 let sessions = [];
 // POST SESSIONS
@@ -33,10 +37,10 @@ router.post('/sessions', async (req, res) => {
     }
 
     // Add session to sessions array
-    sessions.push(session)
+    sessions.push(session);
 
     // Return a new session
-    res.status(201).send({sessionId: session.id})
+    res.status(201).send({sessionId: session.id});
 });
 
 // Making sure our Request is valid
@@ -78,13 +82,13 @@ function authenticateRequest(req, res, next) {
     }
 
     // Add session to request
-    req.session = session
+    req.session = session;
 
     // Add user to request
-    req.user = user
+    req.user = user;
 
     // Continue processing the request
-    next()
+    next();
 }
 
 // Sessions log out
@@ -95,6 +99,45 @@ router.delete('/sessions', authenticateRequest, (req, res) => {
 
     // Return a 204 with no content if the session was deleted
     res.status(204).send()
+});
+
+router.put('/users', async (req, res) => {
+    const { email, password, passwordconfirm } = req.body;
+
+    // TODO: Clean up email, password, passwordconfirm
+
+    if (!email || !password || !passwordconfirm) {
+        return res.status(400).send('All fields are required!');
+    }
+
+    if(password != passwordconfirm) {
+        return res.status(400).send('Passwords do not match!');
+    }
+
+    const user = await getUserByEmail(email);
+    if(user) {
+        return res.status(400).send('User already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // create the user
+    const newUser = await createUser(email, hashedPassword);
+    if(newUser === null) {
+        return res.status(500).send('Something went wrong!');
+    }
+
+    const session = {
+        id: uuidv4(),
+        userId: newUser.id,
+        createdAt: new Date()
+    }
+
+    // Add session to sessions array
+    sessions.push(session);
+
+    // Return a new session
+    res.status(201).send({sessionId: session.id});
 });
 
 module.exports = router;
