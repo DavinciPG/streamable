@@ -1,11 +1,10 @@
-# Example backend for ITA21
+# Streamable project
 
-This backend serves as a reference implementation for ITA21 projects. It is a basic HTTP server, built using the Express framework in JavaScript,designed solely for testing and development purposes. Please note that it is not intended for production use and lacks security, speed, scalability, and aesthetics. Its purpose is solely to support the testing of the frontend and serves as an example of a backend for ITA21 projects.
+This project serves as a alternative for the famous site [Streamable](https://streamable.com). It is a basic HTTP server, built using the Express framework in JavaScript,designed solely for testing and development purposes. Please note that it is not intended for production use and lacks security, speed, scalability, and aesthetics. Its purpose is solely to support the testing of the frontend and serves as an alternative of [Streamable](https://streamable.com).
 
 ## Prerequisites
 
 To begin working with this project, you need to have Node.js installed on your machine. You can download it from the official Node.js website (https://nodejs.org/en/download/).
-
 
 ## Getting Started
 
@@ -33,4 +32,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - [NPM](https://www.npmjs.com/) for the package manager.
 - [Dotenv](https://www.npmjs.com/package/dotenv) for the environment variables.
 - [Bcrypt](https://www.npmjs.com/package/bcrypt) for the password hashing.
--
+- [MySql](https://www.mysql.com/downloads/) for the database.

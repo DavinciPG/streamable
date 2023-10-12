@@ -44,6 +44,35 @@ paths:
           Bearer: []
       summary: Destroy a session
       description: 'Destorys a `Session`, effectively signing out.'
+  /users:
+    summary: Path used create users.
+    description: >-
+      The REST endpoint/path used to list and create zero or more `User` entities.  This path
+      contains a `GET` and `PUT` operation to perform the list and create tasks, respectively.
+    put:
+      requestBody:
+        description: A new `User` to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Users'
+        required: true
+      tags:
+        - /users
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+              examples:
+                Session:
+                  value:
+                    sessionId: 841959fa-b0b9-4185-8673-1531c59cd6c9
+          description: Successful sign up.
+      operationId: createSession
+      summary: Create a Session
+      description: Creates a new instance of a `Session`.
 components:
   schemas:
     Credentials:
@@ -70,6 +99,21 @@ components:
       example:
         email: admin@admin.com
         password: admin
+    Users:
+        title: Root Type for Session
+        description: ''
+        type: object
+        properties:
+          email:
+            type: string
+          password:
+            type: string
+          passwordconfirm:
+            type: string
+        example:
+          email: admin@admin.com
+          password: admin
+          passwordconfirm: admin
   securitySchemes:
     Bearer:
       scheme: bearer
@@ -78,3 +122,6 @@ tags:
   -
     name: /sessions
     description: Operations with sessions
+  -
+    name: /users
+    description: Operations with users
