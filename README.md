@@ -21,6 +21,36 @@ Once you have installed Node.js, follow these steps:
 
 You must create your front end app in public/index.html file. Your front end app will be using the API in index.js as its backend. You can use for example Vue in CDN mode for front end. When needed, create new endpoints in index.js for your front end app. Do not forget to document them in the [swagger.yaml](swagger.yaml) file. An excellent way to generate content to swagger.yaml is to use Apicurio Studio (https://studio.apicur.io/).
 
+# MySQL Database Setup
+
+MySQL is an open-source relational database management system that allows you to store, manage, and retrieve data efficiently. In this section, you'll find instructions on how to set up MySQL, create a database, and create tables.
+
+## MySQL Table of Contents
+
+1. [Installation](#installation)
+2. [Creating a MySQL Database](#creating-a-mysql-database)
+3. [Creating Tables](#creating-tables)
+
+## Installation
+
+Before you start working with MySQL, you'll need to install it on your system. Here's how to do it:
+
+**For Windows:**
+
+- Visit the [MySQL Community Downloads](https://dev.mysql.com/downloads/mysql/) page.
+- Download the MySQL Installer for Windows.
+- Follow the installer instructions to set up MySQL. You can choose to install MySQL Server and other components.
+
+## Creating a MySQL Database
+
+- Log In to MySQL
+- Type `CREATE DATABASE streamable;`
+
+## Creating Tables
+
+- Type `USE streamable;`
+- Type `CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);`
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
