@@ -100,7 +100,7 @@ components:
         email: admin@admin.com
         password: admin
     Users:
-        title: Root Type for Session
+        title: Root Type for User
         description: ''
         type: object
         properties:

@@ -4,7 +4,7 @@ const router = express.Router();
 const {v4: uuidv4} = require('uuid');
 const bcrypt = require('bcrypt');
 
-const { getUserByEmail, createUser } = require('./functions/functions');
+const { getUserByEmail, createUser, getVideosForUser, getUserById } = require('./functions/functions');
 
 // globally stored hash rounds
 const saltRounds = 10;
@@ -61,7 +61,8 @@ function authenticateRequest(req, res, next) {
     }
 
     // Get session ID from header
-    const sessionId = authHeaderParts[1]
+    const authData = JSON.parse(authHeaderParts[1]);
+    const sessionId = authData.sessionId;
 
     // Validate session ID
     if (!sessionId) {
@@ -77,10 +78,10 @@ function authenticateRequest(req, res, next) {
     }
 
     // Get user
-    const user = users.find(user => user.id === session.userId)
+    const user = getUserById(session.userId);
 
     // Validate user
-    if (!user) {
+    if (user === null) {
         return res.status(401).send('User not found')
     }
 
@@ -98,10 +99,10 @@ function authenticateRequest(req, res, next) {
 router.delete('/sessions', authenticateRequest, (req, res) => {
 
     // Remove session from sessions array
-    sessions = sessions.filter(session => session.id !== req.session.id)
+    sessions = sessions.filter(session => session.id !== req.session.id);
 
     // Return a 204 with no content if the session was deleted
-    res.status(204).send()
+    res.status(204).send();
 });
 
 router.put('/users', async (req, res) => {
@@ -141,6 +142,34 @@ router.put('/users', async (req, res) => {
 
     // Return a new session
     res.status(201).send({sessionId: session.id});
+});
+
+router.get('/videos', async (req, res) => {
+    try {
+        await authenticateRequest(req, res, () => {});
+        const user = await req.user;
+        const videos = await getVideosForUser(user.id);
+
+        res.status(200).json(videos);
+    } catch (error) {
+        // error handling
+    }
+});
+
+router.get('/video/:id', async (req, res) => {
+    try {
+        await authenticateRequest(req, res, () => {});
+        const user = await req.user;
+        const video = await getVideoById(req.params.id);
+
+        if (video.owner_id !== user.id && video.private) {
+            return res.status(401).send('Video is private!');
+        }
+
+        res.status(200).json(video);
+    } catch (error) {
+        // error handling
+    }
 });
 
 module.exports = router;

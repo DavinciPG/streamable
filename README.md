@@ -50,6 +50,7 @@ Before you start working with MySQL, you'll need to install it on your system. H
 
 - Type `USE streamable;`
 - Type `CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);`
+- Type `CREATE TABLE videos (id INT AUTO_INCREMENT PRIMARY KEY, owner_id INT NOT NULL, description VARCHAR(255), private BOOLEAN DEFAULT FALSE, createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (owner_id) REFERENCES users(id));`
 
 ## License
 

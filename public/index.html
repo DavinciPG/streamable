@@ -18,6 +18,7 @@
         <button type="button" class="btn btn-success" @click="showSignInModal" v-show="!sessionId">Sign In</button>
         <button type="button" class="btn btn-success" @click="showSignUpModal" v-show="!sessionId">Sign Up</button>
         <button type="button" class="btn btn-danger" @click="signOut" v-if="sessionId">Sign Out</button>
+        <button type="button" class="btn btn-danger" @click="getVideos" v-if="sessionId">Get Videos</button>
         <div id="signInDiv" v-show="!sessionId"
              style="display: flex; justify-content: center; align-items: center; text-align: center; margin-top:5px;"></div>
     </div>
@@ -127,7 +128,6 @@
             },
             send(method, url, data, successCallback, errorCallback) {
                 const headers = {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
 
@@ -136,11 +136,18 @@
                     headers['Authorization'] = 'Bearer ' + this.sessionId
                 }
 
-                fetch(url, {
+                const fetchOptions = {
                     method: method,
-                    headers: headers,
-                    body: JSON.stringify(data)
-                }).then(async response => {
+                    headers: headers
+                }
+
+                if(method !== 'GET') {
+                    fetchOptions.headers['Content-Type'] = 'application/json';
+                    fetchOptions.body = JSON.stringify(data);
+                }
+
+                fetch(url, fetchOptions)
+                .then(async response => {
                     if (response.ok) {
                         successCallback(response);
                     } else {
@@ -187,7 +194,12 @@
                 this.send('DELETE', '/sessions', {}, async response => {
                     this.sessionId = null
                     localStorage.removeItem('sessionId')
-                })
+                });
+            },
+            getVideos() {
+                this.send('GET', '/videos', {}, async response => {
+                    console.log(await response.text());
+                });
             }
         }
     }).mount('#app')

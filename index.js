@@ -22,7 +22,11 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(express.json());
 
 // Cors for all routes
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: 'GET, POST, PUT, DELETE',
+    credentials: false
+}));
 
 // General error handler
 app.use((err, req, res, next) => {
