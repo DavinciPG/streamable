@@ -7,10 +7,11 @@ const app = express();
 const swaggerUi = require('swagger-ui-express');
 const yamlJs = require('yamljs');
 const swaggerDocument = yamlJs.load('./swagger.yaml');
+const cookieParser = require('cookie-parser');
 
 const routing = require("./src/routing");
 
-const cors = require('cors')
+const cors = require('cors');
 
 require('dotenv').config();
 
@@ -19,17 +20,19 @@ const port = process.env.PORT || 3000;
 // Serve static files
 app.use(express.static('public'));
 
+app.use(cookieParser(process.env.SECRET));
+
 // Use the Swagger UI
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Middleware to parse JSON
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
 
 // Cors for all routes
 app.use(cors({
     origin: 'http://localhost:3000',
-    methods: 'GET, POST, PUT, DELETE',
-    credentials: false
+    methods: ['GET', 'POST', 'PUT', 'DELETE' ],
+    credentials: true
 }));
 
 const sessionStore = new SequelizeStore({
@@ -38,10 +41,13 @@ const sessionStore = new SequelizeStore({
 
 app.use(
   session({
-    secret: 'doqdjasijxipm2013masodkqw',
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
+      cookie: {
+          maxAge: 1000 * 60 * 60 * 24 * 7
+      }
   })
 );
 
@@ -52,7 +58,8 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     const status = err.statusCode || 500;
     res.status(status).send(err.message);
-})
+    next();
+});
 
 // Routes
 app.use('/', routing);

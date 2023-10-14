@@ -9,25 +9,75 @@
     <!-- CSS only -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/f18c6cb8af.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="app">
 
-    <!-- Sign In and Out buttons -->
-    <div class="text-center">
-        <button type="button" class="btn btn-success" @click="showSignInModal" v-show="!sessionId">Sign In</button>
-        <button type="button" class="btn btn-success" @click="showSignUpModal" v-show="!sessionId">Sign Up</button>
-        <button type="button" class="btn btn-danger" @click="signOut" v-if="sessionId">Sign Out</button>
-        <button type="button" class="btn btn-danger" @click="getVideos" v-if="sessionId">Get Videos</button>
-        <div id="signInDiv" v-show="!sessionId"
-             style="display: flex; justify-content: center; align-items: center; text-align: center; margin-top:5px;"></div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">Streamable</a>
+            <div class="ml-auto">
+                <button type="button" class="btn btn-success" @click="showSignInModal" v-show="!userId">Sign In</button>
+                <button type="button" class="btn btn-success" @click="showSignUpModal" v-show="!userId">Sign Up</button>
+                <button type="button" class="btn btn-danger" @click="signOut" v-if="userId">Sign Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div v-if="userId">
+    <div class="container mt-5">
+    <h2>Upload Video</h2>
+    <form @submit.prevent="uploadVideo">
+        <div class="form-group">
+            <label for="videoTitle">Title</label>
+            <input type="text" class="form-control" id="videoTitle" v-model="videoTitle" required>
+        </div>
+        <div class="form-group">
+            <label for="videoDescription">Description</label>
+            <textarea class="form-control" id="videoDescription" v-model="videoDescription" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="videoFile">Video File</label><br>
+            <input type="file" class="form-control-file" id="videoFile" @change="handleFileUpload" required>
+        </div>
+        <br>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="isVideoPrivate" v-model="isVideoPrivate">
+            <label class="form-check-label" for="privateCheckbox">Private Video</label>
+        </div>
+        <br>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+
+    <div class="container mt-5">
+        <h2>Videos</h2>
+        <div class="row">
+            <div class="col-md-4" v-for="video in videos" :key="video.id">
+                <div class="card mb-3">
+                    <div class="card-body">
+                            <video width="280" height="240" controls>
+                            <source :src="video.videoUrl" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <h2 class="video-title">{{ video.title }}</h2>
+                        <p class="video-description">{{ video.description }}</p>
+                        <p class="video-timestamp">{{ formatTimestamp(video.createdAt) }}</p>
+                        <div class="form-check">
+                            <input class="form-check-input" id="privateCheckbox" @change="changePrivacy(video.id, video.private)" type="checkbox" v-model="video.private">
+                            <label class="form-check-label" for="privateCheckbox">Private</label>
+                        </div>
+                    <button @click="deleteVideo(video.id)">
+                        <i class="fa fa-trash" style="color: red;"></i>
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <h1>Streamable</h1>
-
-    <!-- App content will later be here -->
-
-
+        </div>
 
     <!-- Modals -->
     <div class="modal" id="signInModal" tabindex="-1">
@@ -90,21 +140,28 @@
         data() {
             return {
                 modalHandler: null,
-                sessionId: null,
+                userId: null,
                 email: null,
-                password: null
+                password: null,
+                email1: null,
+                password1: null,
+                passwordconfirm: null,
+                videoTitle: null,
+                videoDescription: null,
+                isVideoPrivate: false,
+                videos: []
             }
         },
         async created() {
-            // Load the session id from the browser
-            this.getSessionId();
+            try {
+                const userId = await this.getuserId();
 
-            // If there is no session id, show the sign in modal
-            if (!this.sessionId) {
-                document.addEventListener('DOMContentLoaded', async () => {
-                    //this.showSignInModal();
-                    //this.showSignUpModal();
-                })
+                if (userId) {
+                    this.getVideos();
+                    //console.log('Requesting videos for user: ', userId);
+                }
+            } catch (error) {
+                console.error(error);
             }
         },
         methods: {
@@ -136,10 +193,14 @@
                     headers: headers
                 }
 
-                if(method !== 'GET') {
-                    fetchOptions.headers['Content-Type'] = 'application/json';
-                    fetchOptions.body = JSON.stringify(data);
-                }
+                    if (method !== 'GET') {
+                        if(url !== '/videos') {
+                            fetchOptions.body = JSON.stringify(data);
+                            fetchOptions.headers['Content-Type'] = 'application/json';
+                        } else {
+                            fetchOptions.body = data;
+                        }
+                    }
 
                 fetch(url, fetchOptions)
                 .then(async response => {
@@ -164,7 +225,8 @@
                     email: this.email,
                     password: this.password
                 }, async response => {
-                    this.sessionId = await response.text();
+                    this.userId = await response.text();
+                    this.getVideos();
                     this.modalHandler.hide();
                 });
             },
@@ -174,25 +236,96 @@
                   password: this.password1,
                   passwordconfirm: this.passwordconfirm
               }, async response => {
-                  this.sessionId = await response.text();
+                  this.userId = await response.text();
                   this.modalHandler.hide();
               });
             },
             signOut() {
                 this.send('DELETE', '/sessions', {}, async response => {
-                    this.sessionId = null;
+                    this.userId = null;
                 });
             },
             getVideos() {
                 this.send('GET', '/videos', {}, async response => {
-                    console.log(await response.text());
+                    const videos = await response.json();
+                    this.videos = videos.map(video => ({
+                        ...video,
+                        videoUrl: `http://localhost:3000/video/${video.id}`
+                    }));
                 });
             },
-            getSessionId() {
-                 this.send('GET', '/session', {}, async response => {
-                    this.sessionId = await response.text();
+            getuserId() {
+                return new Promise((resolve, reject) => {
+                    this.send('GET', '/session', {}, async response => {
+                        if (response.status === 204) {
+                            this.userId = null;
+                            resolve(null);
+                        } else if (response.status === 200) {
+                            this.userId = await response.text();
+                            resolve(this.userId);
+                        } else {
+                            reject('Error!');
+                        }
+                    });
                 });
-            }
+            },
+            formatTimestamp(timestamp) {
+                const options = {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                };
+
+                return new Date(timestamp).toLocaleString('en-GB', options).replace(',', '').replace('/','.').replace('/','.');
+            },
+            uploadVideo() {
+                if (!this.videoFile) {
+                    alert('Please select a video file.');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('title', this.videoTitle);
+                formData.append('description', this.videoDescription);
+                formData.append('private', this.isVideoPrivate);
+
+                formData.append('videoFile', this.videoFile);
+
+                this.send('PUT', '/videos', formData, async response => {
+                    alert('Video uploaded successfully.');
+                    this.getVideos();
+                });
+            },
+            handleFileUpload(event) {
+                this.videoFile = event.target.files[0];
+            },
+            changePrivacy(videoid, priv) {
+                const formdata = {
+                    isprivate: priv
+                }
+
+                this.send('PUT', `/video/${videoid}/toggle-privacy`, formdata, async response => {
+                    //console.log('Video privacy updated successfully:', response.data);
+                }, (errorResponse) => {
+                    //console.error('Error updating video privacy:', errorResponse.data);
+                });
+            },
+             async deleteVideo(videoId) {
+                if (window.confirm('Are you sure you want to delete this video?')) {
+                    try {
+                        this.send('DELETE', `/video/${videoId}`, {}, async response => {
+                           this.videos = this.videos.filter(video => video.id !== videoId);
+                            alert('Video deleted successfully');
+                        }, (errorResponse) => {
+                            alert('Failed to delete the video');
+                        });
+                    } catch (error) {
+                        console.error('Error deleting video:', error);
+                    }
+                }
+            },
         }
     }).mount('#app')
 </script>

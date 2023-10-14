@@ -55,14 +55,65 @@ exports.getVideosForUser = async (userId) => {
     }
 }
 
-exports.getVideoById = async (userId) => {
+exports.getVideoById = async (id) => {
     try {
         const video = await Video.findOne({
-            where: { owner_id: userId }
+            where: { id: id }
         });
 
         return video;
     } catch(err) {
         // error handling to do
+    }
+}
+
+exports.createNewVideo = async (userId, title, description, private) => {
+    try {
+        const newVideo = await Video.create({ owner_id: userId, title, description, private });
+        return newVideo;
+    } catch(err) {
+        // error handling to do
+    }
+}
+
+exports.togglePrivacy = async (videoId, isPrivate) => {
+    try {
+        console.log(videoId, isPrivate);
+        const [updatedRowsCount, [updatedVideo]] = await Video.update(
+              { private: isPrivate },
+              {
+                where: { id: videoId },
+                returning: true,
+              }
+            );
+
+            if (updatedRowsCount === 0) {
+                // how are we updating a video that doesn't exist?
+                return null;
+            }
+
+            return updatedVideo;
+    } catch(err) {
+
+    }
+}
+
+exports.deleteVideo = async(videoId) => {
+  try {
+        // Use Sequelize to find the video by its ID and delete it
+        const deletedVideoCount = await Video.destroy({
+            where: {
+                id: videoId,
+            },
+        });
+
+        if (deletedVideoCount === 0) {
+            // video doesn't exist
+        }
+
+        return true; // Video deleted successfully
+    } catch (error) {
+        console.error('Error deleting video:', error);
+        throw error; // You can handle this error in your route handler
     }
 }
