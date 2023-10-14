@@ -29,7 +29,6 @@ MySQL is an open-source relational database management system that allows you to
 
 1. [Installation](#installation)
 2. [Creating a MySQL Database](#creating-a-mysql-database)
-3. [Creating Tables](#creating-tables)
 
 ## Installation
 
@@ -45,12 +44,6 @@ Before you start working with MySQL, you'll need to install it on your system. H
 
 - Log In to MySQL
 - Type `CREATE DATABASE streamable;`
-
-## Creating Tables
-
-- Type `USE streamable;`
-- Type `CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP);`
-- Type `CREATE TABLE videos (id INT AUTO_INCREMENT PRIMARY KEY, owner_id INT NOT NULL, description VARCHAR(255), private BOOLEAN DEFAULT FALSE, createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (owner_id) REFERENCES users(id));`
 
 ## License
 

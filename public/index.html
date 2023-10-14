@@ -97,7 +97,7 @@
         },
         async created() {
             // Load the session id from the browser
-            this.sessionId = localStorage.getItem('sessionId')
+            this.getSessionId();
 
             // If there is no session id, show the sign in modal
             if (!this.sessionId) {
@@ -131,11 +131,6 @@
                     'Accept': 'application/json'
                 }
 
-                // Add the session id to the headers if it exists
-                if (this.sessionId) {
-                    headers['Authorization'] = 'Bearer ' + this.sessionId
-                }
-
                 const fetchOptions = {
                     method: method,
                     headers: headers
@@ -152,11 +147,6 @@
                         successCallback(response);
                     } else {
                         if (response.status === 401) {
-
-                            // If the session id is invalid, remove it from the browser
-                            this.sessionId = null;
-                            localStorage.removeItem('sessionId');
-
                             //this.showSignInModal();
                             return;
                         }
@@ -175,7 +165,6 @@
                     password: this.password
                 }, async response => {
                     this.sessionId = await response.text();
-                    localStorage.setItem('sessionId', this.sessionId);
                     this.modalHandler.hide();
                 });
             },
@@ -186,19 +175,22 @@
                   passwordconfirm: this.passwordconfirm
               }, async response => {
                   this.sessionId = await response.text();
-                  localStorage.setItem('sessionId', this.sessionId);
                   this.modalHandler.hide();
               });
             },
             signOut() {
                 this.send('DELETE', '/sessions', {}, async response => {
-                    this.sessionId = null
-                    localStorage.removeItem('sessionId')
+                    this.sessionId = null;
                 });
             },
             getVideos() {
                 this.send('GET', '/videos', {}, async response => {
                     console.log(await response.text());
+                });
+            },
+            getSessionId() {
+                 this.send('GET', '/session', {}, async response => {
+                    this.sessionId = await response.text();
                 });
             }
         }

@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-const {v4: uuidv4} = require('uuid');
 const bcrypt = require('bcrypt');
 
-const { getUserByEmail, createUser, getVideosForUser, getUserById } = require('./functions/functions');
+const { getUserByEmail, createUser, getVideosForUser, getUserById, getVideoById } = require('./functions/functions');
 
 // globally stored hash rounds
 const saltRounds = 10;
 
-let sessions = [];
 // POST SESSIONS
 router.post('/sessions', async (req, res) => {
     // Validate email and password
@@ -32,75 +30,38 @@ router.post('/sessions', async (req, res) => {
         return res.status(400).send('Invalid password')
     }
 
-    // If valid, create a session
-    const session = {
-        id: uuidv4(),
-        userId: user.id,
-        createdAt: new Date()
-    }
-
-    // Add session to sessions array
-    sessions.push(session);
+    req.session.userId = user.id;
 
     // Return a new session
-    res.status(201).send({sessionId: session.id});
+    res.status(201).send({sessionId: req.session.id});
 });
 
 // Making sure our Request is valid
 function authenticateRequest(req, res, next) {
-    // Check for authorization header
-    const authHeader = req.headers.authorization
-    if (!authHeader) {
-        return res.status(401).send('Authorization header is required')
-    }
-
-    // Check Authorization header format
-    const authHeaderParts = authHeader.split(' ')
-    if (authHeaderParts.length !== 2 || authHeaderParts[0] !== 'Bearer') {
-        return res.status(401).send('Authorization header format must be "Bearer {token}"')
-    }
-
-    // Get session ID from header
-    const authData = JSON.parse(authHeaderParts[1]);
-    const sessionId = authData.sessionId;
-
-    // Validate session ID
-    if (!sessionId) {
-        return res.status(401).send('Session ID is required')
-    }
-
-    // Get session
-    const session = sessions.find(session => session.id === sessionId)
-
     // If session not found, return 401
-    if (!session) {
+    if (!req.session) {
         return res.status(401).send('Invalid session')
     }
 
     // Get user
-    const user = getUserById(session.userId);
+    const user = getUserById(req.session.userId);
 
     // Validate user
     if (user === null) {
         return res.status(401).send('User not found')
     }
 
-    // Add session to request
-    req.session = session;
-
-    // Add user to request
-    req.user = user;
-
     // Continue processing the request
     next();
 }
 
+router.get('/session', authenticateRequest, async (req, res) => {
+    res.status(201).send({sessionId: req.session.id});
+});
+
 // Sessions log out
 router.delete('/sessions', authenticateRequest, (req, res) => {
-
-    // Remove session from sessions array
-    sessions = sessions.filter(session => session.id !== req.session.id);
-
+    req.session.destroy(); // also needs error handling
     // Return a 204 with no content if the session was deleted
     res.status(204).send();
 });
@@ -131,24 +92,15 @@ router.put('/users', async (req, res) => {
         return res.status(500).send('Something went wrong!');
     }
 
-    const session = {
-        id: uuidv4(),
-        userId: newUser.id,
-        createdAt: new Date()
-    }
-
-    // Add session to sessions array
-    sessions.push(session);
+    req.session.userId = newUser.id;
 
     // Return a new session
-    res.status(201).send({sessionId: session.id});
+    res.status(201).send({sessionId: req.session.id});
 });
 
-router.get('/videos', async (req, res) => {
+router.get('/videos', authenticateRequest, async (req, res) => {
     try {
-        await authenticateRequest(req, res, () => {});
-        const user = await req.user;
-        const videos = await getVideosForUser(user.id);
+        const videos = await getVideosForUser(req.session.userId);
 
         res.status(200).json(videos);
     } catch (error) {
@@ -156,13 +108,12 @@ router.get('/videos', async (req, res) => {
     }
 });
 
-router.get('/video/:id', async (req, res) => {
+router.get('/video/:id', authenticateRequest, async (req, res) => {
     try {
-        await authenticateRequest(req, res, () => {});
-        const user = await req.user;
+        const user = req.session.userId;
         const video = await getVideoById(req.params.id);
 
-        if (video.owner_id !== user.id && video.private) {
+        if (video.owner_id !== user && video.private) {
             return res.status(401).send('Video is private!');
         }
 

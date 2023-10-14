@@ -1,4 +1,8 @@
 const express = require('express');
+const session = require('express-session');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const db = require('./src/config/config');
+const Session = require('./src/models/Session');
 const app = express();
 const swaggerUi = require('swagger-ui-express');
 const yamlJs = require('yamljs');
@@ -27,6 +31,21 @@ app.use(cors({
     methods: 'GET, POST, PUT, DELETE',
     credentials: false
 }));
+
+const sessionStore = new SequelizeStore({
+  db: db,
+});
+
+app.use(
+  session({
+    secret: 'doqdjasijxipm2013masodkqw',
+    resave: false,
+    saveUninitialized: false,
+    store: sessionStore,
+  })
+);
+
+Session.sync();
 
 // General error handler
 app.use((err, req, res, next) => {
