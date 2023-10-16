@@ -46,7 +46,7 @@ app.use(
     saveUninitialized: false,
     store: sessionStore,
       cookie: {
-          maxAge: 1000 * 60 * 60 * 24 * 7
+          maxAge: 1000 * 60 * 60 * 24 * 7 // 1000 ms * 60s * 60m * 24h * 7d = 7d worth of seconds
       }
   })
 );

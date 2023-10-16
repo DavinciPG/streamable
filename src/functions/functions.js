@@ -5,41 +5,44 @@ const Video = require('../models/Video');
 
 exports.getUserByEmail = async (email) => {
     try {
-        const user = await User.findOne({
+        // you either get user or null
+        return await User.findOne({
             where: {
                 email: email
             }
         });
-
-        // you either get user or null
-        return user;
     } catch(err) {
-        // error handling to do
+        console.error(err);
+        throw err;
     }
 }
 
 exports.getUserById = async (id) => {
     try {
-        const user = await User.findOne({
+        // you either get user or null
+        return await User.findOne({
             where: {
                 id: id
             }
         });
-
-        // you either get user or null
-        return user;
     } catch(err) {
-        // error handling to do
+        console.error(err);
+        throw err;
     }
 }
 
 exports.createUser = async (email, password) => {
     try {
         const newUser = await User.create({ email, password });
-        // we return for extra validaiton checks
+        if(!newUser) {
+            throw Error(`Failed creating account with parameters: email ${email}, password ${password}`);
+        }
+
+        console.log(`User created ${newUser.id}`);
         return newUser;
     } catch(err) {
-        // error handling to do
+        console.error(err);
+        throw err;
     }
 }
 
@@ -49,9 +52,11 @@ exports.getVideosForUser = async (userId) => {
            where: { owner_id: userId }
         });
 
+        console.log(`Searched for user: ${userId} videos, returned ${videos.length} videos.`);
         return videos;
     } catch(err) {
-        // error handling to do
+        console.error(err);
+        throw err;
     }
 }
 
@@ -61,24 +66,34 @@ exports.getVideoById = async (id) => {
             where: { id: id }
         });
 
+        // NOTE: You technically do not have to log this, upon having a large user base you should either be not logging or logging to a separate file. Just gets in the way of other needed logs.
+        // For a view system you can do the increasing of views in here also, just get the owner of the video and check the session userId to make sure they are different, so it does not increase when you watch your own videos.
+        console.log(`Requested video ${id}.`);
         return video;
     } catch(err) {
-        // error handling to do
+        console.error(err);
+        throw err;
     }
 }
 
 exports.createNewVideo = async (userId, title, description, private) => {
     try {
         const newVideo = await Video.create({ owner_id: userId, title, description, private });
+        if(!newVideo) {
+            // the way I do my parameter logging is very bad. Can be made more readable to the human eye.
+            throw Error(`Failed creating video with parameters: owner_id ${userId}, title ${title}, description ${description}, private ${private}`);
+        }
+
+        console.log(`Created new video ${newVideo.id}.`);
         return newVideo;
     } catch(err) {
-        // error handling to do
+        console.error(err);
+        throw err;
     }
 }
 
 exports.togglePrivacy = async (videoId, isPrivate) => {
     try {
-        console.log(videoId, isPrivate);
         const [updatedRowsCount, [updatedVideo]] = await Video.update(
               { private: isPrivate },
               {
@@ -88,13 +103,16 @@ exports.togglePrivacy = async (videoId, isPrivate) => {
             );
 
             if (updatedRowsCount === 0) {
-                // how are we updating a video that doesn't exist?
+                // Should never occur on your own code.
+                console.error(`Trying to update video [${videoId}] that does not exist!`);
                 return null;
             }
 
+            console.log(`Video privacy [${videoId}] changed to ${isPrivate}`);
             return updatedVideo;
     } catch(err) {
-
+        console.error(err);
+        throw err;
     }
 }
 
@@ -108,12 +126,13 @@ exports.deleteVideo = async(videoId) => {
         });
 
         if (deletedVideoCount === 0) {
-            // video doesn't exist
+            console.error(`Tried deleting video [${videoId}] which does not exist!`);
+            return false;
         }
 
-        return true; // Video deleted successfully
+        return true;
     } catch (error) {
         console.error('Error deleting video:', error);
-        throw error; // You can handle this error in your route handler
+        throw error;
     }
 }
