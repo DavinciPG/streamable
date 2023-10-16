@@ -27,57 +27,57 @@
     </nav>
 
     <div v-if="userId">
-    <div class="container mt-5">
-    <h2>Upload Video</h2>
-    <form @submit.prevent="uploadVideo">
-        <div class="form-group">
-            <label for="videoTitle">Title</label>
-            <input type="text" class="form-control" id="videoTitle" v-model="videoTitle" required>
+        <div class="container mt-5">
+            <h2>Upload Video</h2>
+            <form @submit.prevent="uploadVideo">
+                <div class="form-group">
+                    <label for="videoTitle">Title</label>
+                    <input type="text" class="form-control" id="videoTitle" v-model="videoTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="videoDescription">Description</label>
+                    <textarea class="form-control" id="videoDescription" v-model="videoDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="videoFile">Video File</label><br>
+                    <input type="file" class="form-control-file" id="videoFile" @change="handleFileUpload" required>
+                </div>
+                <br>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="isVideoPrivate" v-model="isVideoPrivate">
+                    <label class="form-check-label" for="isVideoPrivate">Private Video</label>
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="videoDescription">Description</label>
-            <textarea class="form-control" id="videoDescription" v-model="videoDescription" required></textarea>
-        </div>
-        <div class="form-group">
-            <label for="videoFile">Video File</label><br>
-            <input type="file" class="form-control-file" id="videoFile" @change="handleFileUpload" required>
-        </div>
-        <br>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="isVideoPrivate" v-model="isVideoPrivate">
-            <label class="form-check-label" for="privateCheckbox">Private Video</label>
-        </div>
-        <br>
-        <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
-</div>
 
-    <div class="container mt-5">
-        <h2>Videos</h2>
-        <div class="row">
-            <div class="col-md-4" v-for="video in videos" :key="video.id">
-                <div class="card mb-3">
-                    <div class="card-body">
-                            <video width="280" height="240" controls>
-                            <source :src="video.videoUrl" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <h2 class="video-title">{{ video.title }}</h2>
-                        <p class="video-description">{{ video.description }}</p>
-                        <p class="video-timestamp">{{ formatTimestamp(video.createdAt) }}</p>
-                        <div class="form-check">
-                            <input class="form-check-input" id="privateCheckbox" @change="changePrivacy(video.id, video.private)" type="checkbox" v-model="video.private">
-                            <label class="form-check-label" for="privateCheckbox">Private</label>
+        <div class="container mt-5">
+            <h2>Videos</h2>
+            <div class="row">
+                <div class="col-md-4" v-for="video in videos" :key="video.id">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <video class="img-fluid" controls>
+                                <source :src="video.videoUrl" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <h2 class="video-title">{{ video.title }}</h2>
+                            <p class="video-description">{{ video.description }}</p>
+                            <p class="video-timestamp">{{ formatTimestamp(video.createdAt) }}</p>
+                            <div class="form-check">
+                                <input class="form-check-input" id="privateCheckbox" @change="changePrivacy(video.id, video.private)" type="checkbox" v-model="video.private">
+                                <label class="form-check-label" for="privateCheckbox">Private</label>
+                            </div>
+                            <button @click="deleteVideo(video.id)">
+                                <i class="fa fa-trash" style="color: red;"></i>
+                            </button>
                         </div>
-                    <button @click="deleteVideo(video.id)">
-                        <i class="fa fa-trash" style="color: red;"></i>
-                    </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-        </div>
 
     <!-- Modals -->
     <div class="modal" id="signInModal" tabindex="-1">
@@ -193,32 +193,32 @@
                     headers: headers
                 }
 
-                    if (method !== 'GET') {
-                        if(url !== '/videos') {
-                            fetchOptions.body = JSON.stringify(data);
-                            fetchOptions.headers['Content-Type'] = 'application/json';
-                        } else {
-                            fetchOptions.body = data;
-                        }
+                if (method !== 'GET') {
+                    if (url !== '/videos') {
+                        fetchOptions.body = JSON.stringify(data);
+                        fetchOptions.headers['Content-Type'] = 'application/json';
+                    } else {
+                        fetchOptions.body = data;
                     }
+                }
 
                 fetch(url, fetchOptions)
-                .then(async response => {
-                    if (response.ok) {
-                        successCallback(response);
-                    } else {
-                        if (response.status === 401) {
-                            //this.showSignInModal();
-                            return;
-                        }
-
-                        if (errorCallback) {
-                            errorCallback(response);
+                    .then(async response => {
+                        if (response.ok) {
+                            successCallback(response);
                         } else {
-                            alert(await response.text());
+                            if (response.status === 401) {
+                                //this.showSignInModal();
+                                return;
+                            }
+
+                            if (errorCallback) {
+                                errorCallback(response);
+                            } else {
+                                alert(await response.text());
+                            }
                         }
-                    }
-                })
+                    })
             },
             signIn() {
                 this.send('POST', '/sessions', {
@@ -231,14 +231,14 @@
                 });
             },
             signUp() {
-              this.send('PUT', '/users', {
-                  email: this.email1,
-                  password: this.password1,
-                  passwordconfirm: this.passwordconfirm
-              }, async response => {
-                  this.userId = await response.text();
-                  this.modalHandler.hide();
-              });
+                this.send('PUT', '/users', {
+                    email: this.email1,
+                    password: this.password1,
+                    passwordconfirm: this.passwordconfirm
+                }, async response => {
+                    this.userId = await response.text();
+                    this.modalHandler.hide();
+                });
             },
             signOut() {
                 this.send('DELETE', '/sessions', {}, async response => {
@@ -278,7 +278,7 @@
                     minute: '2-digit',
                 };
 
-                return new Date(timestamp).toLocaleString('en-GB', options).replace(',', '').replace('/','.').replace('/','.');
+                return new Date(timestamp).toLocaleString('en-GB', options).replace(',', '').replace('/', '.').replace('/', '.');
             },
             uploadVideo() {
                 if (!this.videoFile) {
@@ -299,7 +299,8 @@
                 });
             },
             handleFileUpload(event) {
-                this.videoFile = event.target.files[0];
+                if(this.fileValidation())
+                    this.videoFile = event.target.files[0];
             },
             changePrivacy(videoid, priv) {
                 const formdata = {
@@ -312,11 +313,11 @@
                     //console.error('Error updating video privacy:', errorResponse.data);
                 });
             },
-             async deleteVideo(videoId) {
+            async deleteVideo(videoId) {
                 if (window.confirm('Are you sure you want to delete this video?')) {
                     try {
                         this.send('DELETE', `/video/${videoId}`, {}, async response => {
-                           this.videos = this.videos.filter(video => video.id !== videoId);
+                            this.videos = this.videos.filter(video => video.id !== videoId);
                             alert('Video deleted successfully');
                         }, (errorResponse) => {
                             alert('Failed to delete the video');
@@ -326,6 +327,24 @@
                     }
                 }
             },
+            fileValidation() {
+                let fileInput =
+                    document.getElementById('videoFile');
+
+                let filePath = fileInput.value;
+
+                // Allowing file type
+                let allowedExtensions =
+                    /(\.mp4)$/i;
+
+                if (!allowedExtensions.exec(filePath)) {
+                    alert('Invalid file type');
+                    fileInput.value = '';
+                    return false;
+                }
+
+                return true;
+            }
         }
     }).mount('#app')
 </script>

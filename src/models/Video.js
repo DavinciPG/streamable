@@ -30,4 +30,6 @@ const Video = db.define('videos', {
 
 Video.belongsTo(db.models.user, { foreignKey: 'owner_id' });
 
+Video.sync();
+
 module.exports = Video;

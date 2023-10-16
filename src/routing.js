@@ -150,6 +150,9 @@ router.get('/video/:id', authenticateRequest, async (req, res) => {
         const user = req.session.userId;
         const video = await getVideoById(req.params.id);
 
+        if(!video)
+            return res.status(400).send('Video does not exist!');
+
         if (video.owner_id !== user && video.private) {
             return res.status(401).send('Video is private!');
         }

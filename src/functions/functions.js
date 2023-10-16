@@ -5,6 +5,10 @@ const Video = require('../models/Video');
 
 exports.getUserByEmail = async (email) => {
     try {
+        // for some reason User.findOne cannot do the check itself
+        if(email === undefined)
+            return null;
+
         // you either get user or null
         return await User.findOne({
             where: {
@@ -19,6 +23,10 @@ exports.getUserByEmail = async (email) => {
 
 exports.getUserById = async (id) => {
     try {
+        // for some reason User.findOne cannot do the check itself
+        if(id === undefined)
+            return null;
+
         // you either get user or null
         return await User.findOne({
             where: {
@@ -34,9 +42,6 @@ exports.getUserById = async (id) => {
 exports.createUser = async (email, password) => {
     try {
         const newUser = await User.create({ email, password });
-        if(!newUser) {
-            throw Error(`Failed creating account with parameters: email ${email}, password ${password}`);
-        }
 
         console.log(`User created ${newUser.id}`);
         return newUser;
@@ -76,13 +81,9 @@ exports.getVideoById = async (id) => {
     }
 }
 
-exports.createNewVideo = async (userId, title, description, private) => {
+exports.createNewVideo = async (userId, title, description, privatee) => {
     try {
-        const newVideo = await Video.create({ owner_id: userId, title, description, private });
-        if(!newVideo) {
-            // the way I do my parameter logging is very bad. Can be made more readable to the human eye.
-            throw Error(`Failed creating video with parameters: owner_id ${userId}, title ${title}, description ${description}, private ${private}`);
-        }
+        const newVideo = await Video.create({ owner_id: userId, title, description, privatee });
 
         console.log(`Created new video ${newVideo.id}.`);
         return newVideo;
