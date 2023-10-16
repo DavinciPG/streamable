@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Video = require('../models/Video');
+const LoginAttempts = require('../models/LoginAttempts');
+const Logins = require('../models/Logins');
 
 // NOTE: ALL FUNCTIONS EXPECT YOU ARE SENDING FILTERED AND VALID ITEMS
 
@@ -39,9 +41,9 @@ exports.getUserById = async (id) => {
     }
 }
 
-exports.createUser = async (email, password) => {
+exports.createUser = async (email, password, loginIP) => {
     try {
-        const newUser = await User.create({ email, password });
+        const newUser = await User.create({ email, password, IP: loginIP });
 
         console.log(`User created ${newUser.id}`);
         return newUser;
@@ -95,7 +97,7 @@ exports.createNewVideo = async (userId, title, description, privatee) => {
 
 exports.togglePrivacy = async (videoId, isPrivate) => {
     try {
-        const [updatedRowsCount, [updatedVideo]] = await Video.update(
+        const result = await Video.update(
               { private: isPrivate },
               {
                 where: { id: videoId },
@@ -103,14 +105,14 @@ exports.togglePrivacy = async (videoId, isPrivate) => {
               }
             );
 
-            if (updatedRowsCount === 0) {
+            if (result.length === 0) {
                 // Should never occur on your own code.
                 console.error(`Trying to update video [${videoId}] that does not exist!`);
                 return null;
             }
 
             console.log(`Video privacy [${videoId}] changed to ${isPrivate}`);
-            return updatedVideo;
+            return result;
     } catch(err) {
         console.error(err);
         throw err;
@@ -136,4 +138,40 @@ exports.deleteVideo = async(videoId) => {
         console.error('Error deleting video:', error);
         throw error;
     }
+}
+
+exports.getAttempts = async (IP) => {
+    try {
+        return await LoginAttempts.findAll({ where: { IP: IP }});
+    } catch(error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+exports.insertAttempt = async (IP) => {
+    try {
+        return await LoginAttempts.create( { IP: IP});
+    } catch(error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+exports.insertLogin = async (IP, uid) => {
+    try {
+        return await Logins.create( { IP: IP, userId: uid });
+    } catch(error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+exports.cleanEmail = async(email) => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
+    if(!emailRegex.test(email))
+        return false;
+
+    return true;
 }

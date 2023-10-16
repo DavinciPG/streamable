@@ -14,7 +14,10 @@ const {
     getVideoById,
     createNewVideo,
     togglePrivacy,
-    deleteVideo
+    deleteVideo,
+    getAttempts,
+    insertAttempt,
+    insertLogin, cleanEmail
 } = require('./functions/functions');
 
 // globally stored hash rounds
@@ -28,30 +31,47 @@ router.post('/sessions', async (req, res) => {
            return res.status(400).send('Already logged in!');
 
        // Validate email and password
-       if (!req.body.email || !req.body.password) {
+       if (!req.body.email || !req.body.password)
            return res.status(400).send('Email and password are required fields');
-       }
 
-       // TODO: Clean up email and password
+       // We only need to clean email because we bcrypt the password
+       const emailIsClean = cleanEmail(req.body.email);
+       if(!emailIsClean)
+           return res.status(400).send('Enter a valid email');
+
+       const attempts = await getAttempts(req.ip)
+       if(attempts.length > 3)
+           return res.status(400).send('Too many attempts. Try again later...');
 
        // Get user
        const user = await getUserByEmail(req.body.email);
-       if (user === null) {
-           return res.status(400).send('User not found')
-       }
+       if (user === null)
+           return res.status(400).send('User not found');
 
        const passwordsMatch = await bcrypt.compare(req.body.password, user.password);
 
        // Check password
        if (!passwordsMatch) {
-           // TODO: invalidate attempts after 3 tries
-           return res.status(400).send('Invalid password')
+           const insertedAttempt = await insertAttempt(req.ip);
+           return res.status(400).send('Invalid password');
        }
+
+       // So right here, since we are saving the IP of the login, a very simple 2 factor auth would be possible here.
+       /*
+       // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
+       if(user.IP.localeCompare(req.ip) === -1) {
+           // user does not have the same ip as the owner of the account
+
+           // you either do not allow login or send a email to the user to ask for auth, if so then you need to make another table called IPs and save the [userId, IP ( each ip that the user allows ), expiryDate];
+           return;
+       }
+       */
 
        // Setting our user to be logged in
        req.session.userId = user.id;
        // Keep track of user logins
        console.log(`User ${user.id} logged in at ${Date.now()}`);
+       const loginAttempt = await insertLogin(req.ip, user.id);
 
        // Return a new session
        res.status(201).send({userId: user.id});
@@ -101,11 +121,17 @@ router.put('/users', async (req, res) => {
     try {
         const {email, password, passwordconfirm} = req.body;
 
-        // TODO: Clean up email, password, passwordconfirm
-
         if (!email || !password || !passwordconfirm) {
             return res.status(400).send('All fields are required!');
         }
+
+        // We only need to clean email because we bcrypt the password
+        const emailIsClean = cleanEmail(req.body.email);
+        if(!emailIsClean)
+            return res.status(400).send('Enter a valid email');
+
+        if(password.length <= 5 || password.length >= 255)
+            return res.status(400).send('Password must be between 5 to 255 letters long');
 
         if (password !== passwordconfirm) {
             return res.status(400).send('Passwords do not match!');
@@ -119,7 +145,7 @@ router.put('/users', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // create the user
-        const newUser = await createUser(email, hashedPassword);
+        const newUser = await createUser(email, hashedPassword, req.ip);
 
         // This is not required cause createUser throws an error already, just in case keeping it.
         if (newUser === null)

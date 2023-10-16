@@ -22,6 +22,10 @@ const User = db.define('user', {
     updatedAt: {
         type: DataTypes.DATE,
         allowNull: true,
+    },
+    IP: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
 });
 
