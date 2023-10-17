@@ -1,11 +1,28 @@
 @echo off
-TITLE Streamable
+title Streamable
+
+REM Change working directory to your project folder
+cd /d "C:\Users\Erkz\Documents\GitHub\streamable"
+
+REM Open Port 3000
 netsh advfirewall firewall add rule name="Open Port 3000" dir=in action=allow protocol=TCP localport=3000
-ECHO ==========================
-ECHO git fetch
-ECHO ==========================
-ECHO git pull
-ECHO ==========================
-ECHO npm install
-ECHO ==========================
-ECHO npm start
+
+REM Perform Git and NPM commands
+echo ==========================
+echo Updating the Git repository...
+echo ==========================
+git fetch
+echo ==========================
+echo Pulling from Git...
+echo ==========================
+git pull
+echo ==========================
+echo Installing npm packages...
+echo ==========================
+npm install
+echo ==========================
+echo Starting the application...
+echo ==========================
+npm start
+
+pause
