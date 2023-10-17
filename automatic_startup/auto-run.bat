@@ -19,10 +19,16 @@ git pull
 echo ==========================
 echo Installing npm packages...
 echo ==========================
-npm install
+call npm install
 echo ==========================
 echo Starting the application...
 echo ==========================
-npm start
+call npm start
+echo ==========================
+echo Starting the application...
+echo ==========================
 
+REM Pause to keep the command prompt window open
 pause
+
+
