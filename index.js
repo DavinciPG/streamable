@@ -8,14 +8,18 @@ const swaggerUi = require('swagger-ui-express');
 const yamlJs = require('yamljs');
 const swaggerDocument = yamlJs.load('./swagger.yaml');
 const cookieParser = require('cookie-parser');
+const http = require('http');
 
 const routing = require("./src/routing");
 
 const cors = require('cors');
 
+const server = http.createServer(app);
+
 require('dotenv').config();
 
 const port = process.env.PORT || 3000;
+const ip = process.env.IP;
 
 // Serve static files
 app.use(express.static('public'));
@@ -30,7 +34,7 @@ app.use(express.json({limit: '50mb'}));
 
 // Cors for all routes
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: `http://${ip}:${port}`,
     methods: ['GET', 'POST', 'PUT', 'DELETE' ],
     credentials: true
 }));
@@ -64,6 +68,7 @@ app.use((err, req, res, next) => {
 // Routes
 app.use('/', routing);
 
-app.listen(port, () => {
-    console.log(`App running. Docs at http://localhost:${port}/docs`);
+server.listen(port, ip, () => {
+    const url = `http://${ip}:${port}`;
+    console.log(`App running. Docs at ${url}/docs`);
 })
